@@ -50,7 +50,7 @@ def upload():
 
 @app.route("/delete", methods=["GET", "POST"])
 def deleteviaGET():
-    deletionUUID = request.form.get("deletionUUID", "fail")
+    deletionUUID = request.args.get("deletionUUID")
     if deletionUUID == "begin":
         return 'Nothing Deleted, incorrect UUID'
     with open("./uploads/images.json") as f:
