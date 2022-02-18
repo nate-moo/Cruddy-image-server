@@ -1,12 +1,13 @@
 {
   "name": "cruddy-image-server",
-  "version": "0.1.0",
+  "version": "0.18.5",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start -p 443",
-    "lint": "next lint"
+    "start": "next start -p 8080",
+    "lint": "next lint",
+    "export": "next build && next export && rmdir /s ..\\..\\API\\out && xcopy out\\ ..\\..\\API\\out\\ /E /y"
   },
   "dependencies": {
     "@emotion/react": "^11.7.1",
