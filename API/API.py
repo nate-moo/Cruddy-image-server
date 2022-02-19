@@ -4,7 +4,6 @@ from json import loads, dumps
 from uuid import uuid4
 from os import remove
 from os.path import splitext
-from waitress import serve
 from html import escape
 
 app = Flask(__name__)
