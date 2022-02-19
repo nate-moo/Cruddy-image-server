@@ -107,4 +107,5 @@ dist
 __pycache__
 *.pyc
 
-/uploads/*
+uploads/*
+images.json
