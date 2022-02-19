@@ -4,7 +4,29 @@ from json import loads, dumps
 from uuid import uuid4
 from os import remove
 from os.path import splitext
-from html import escape
+from google.cloud import storage
+storage_client = storage.Client()
+bucket_name = "cruddyxyz-bucket"
+bucket = storage_client.bucket(bucket_name)
+
+def uploadToBucket(stream, source_file_name):
+    blob = bucket.blob(source_file_name)
+    blob.upload_from_file(stream)
+    # blob.upload_from_filename(source_file_name)
+    # blob.make_public()
+    return blob.media_link
+
+def grabFromBucket(source_file_name):
+    # blob = bucket.blob(source_file_name)
+    blob = bucket.get_blob(source_file_name)
+    try:
+        return blob.media_link
+    except AttributeError:
+        return None
+
+def deleteFromBucket(source_file_name):
+    blob = bucket.get_blob(source_file_name)
+    blob.delete()
 
 app = Flask(__name__)
 
@@ -34,9 +56,11 @@ def upload():
             images["images"].append(name)
         with open("./uploads/images.json", mode="w") as f:
             f.write(dumps(images))
-        type.save(f"./uploads/{name[0]}")
+        print(name[0])
+        uri = uploadToBucket(type.stream, name[0])
+        # type.save(f"./uploads/{name[0]}")
         return dumps({
-            "FullURL": f"{request.url_root}uploads/{name[0]}",
+            "FullURL": f"{uri}",
             "image": name[0],
             "uuid": name[1]
         })
@@ -58,7 +82,8 @@ def deleteviaGET():
         # return 'ur mom'
             if uuid[1][1] == deletionUUID:
                 print('deleted')
-                remove(f"./uploads/{uuid[1][0]}")
+                # remove(f"./uploads/{uuid[1][0]}")
+                deleteFromBucket(uuid[1][0])
                 images["images"].pop(uuid[0])
                 with open("./uploads/images.json", mode="w") as f:
                     f.write(dumps(images))
@@ -78,7 +103,8 @@ def delete(deletionUUID):
         # return 'ur mom'
             if uuid[1][1] == deletionUUID:
                 print('deleted')
-                remove(f"./uploads/{uuid[1][0]}")
+                # remove(f"./uploads/{uuid[1][0]}")
+                deleteFromBucket(uuid[1][0])
                 images["images"].pop(uuid[0])
                 with open("./uploads/images.json", mode="w") as f:
                     f.write(dumps(images))
@@ -86,9 +112,18 @@ def delete(deletionUUID):
                 return f'deleted: {deletionUUID}'
     return 'Nothing Deleted, incorrect UUID'
 
-@app.route("/uploads/<filename>", methods=["GET"])
+@app.route("/view/<filename>", methods=["GET"])
 def getFile(filename):
     if filename != "images.json":
-        return send_file(f"./uploads/{secure_filename(filename)}")
+        # return send_file(f"./uploads/{secure_filename(filename)}")
+        return f"<img src='{grabFromBucket(filename)}' />"
+    else:
+        return "no"
+
+@app.route("/uploads/<filename>")
+def getLink(filename):
+    if filename != "images.json":
+        # return send_file(f"./uploads/{secure_filename(filename)}")
+        return redirect(grabFromBucket(filename))
     else:
         return "no"
