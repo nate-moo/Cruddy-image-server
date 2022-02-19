@@ -4,13 +4,9 @@ from json import loads, dumps
 from uuid import uuid4
 from os import remove
 from os.path import splitext
-from waitress import serve
 from html import escape
 
-UPLOAD_FOLDER = "./uploads"
-
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 ## Index
 @app.route("/<path:name>", methods=["GET"])
@@ -92,4 +88,7 @@ def delete(deletionUUID):
 
 @app.route("/uploads/<filename>", methods=["GET"])
 def getFile(filename):
-    return send_file(f"./uploads/{secure_filename(filename)}")
+    if filename != "images.json":
+        return send_file(f"./uploads/{secure_filename(filename)}")
+    else:
+        return "no"
