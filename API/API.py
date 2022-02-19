@@ -14,7 +14,7 @@ def uploadToBucket(stream, source_file_name):
     blob.upload_from_file(stream)
     # blob.upload_from_filename(source_file_name)
     # blob.make_public()
-    return blob.media_link
+    return blob.public_url
 
 def grabFromBucket(source_file_name):
     # blob = bucket.blob(source_file_name)
