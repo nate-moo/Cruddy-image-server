@@ -2,16 +2,15 @@ from flask import Flask, redirect, request, send_file, send_from_directory, url_
 from werkzeug.utils import secure_filename
 from json import loads, dumps
 from uuid import uuid4
-from os import remove
 from os.path import splitext
 from google.cloud import storage
 storage_client = storage.Client()
 bucket_name = "cruddyxyz-bucket"
 bucket = storage_client.bucket(bucket_name)
 
-def uploadToBucket(stream, source_file_name):
+def uploadToBucket(stream, source_file_name, content_type):
     blob = bucket.blob(source_file_name)
-    blob.upload_from_file(stream)
+    blob.upload_from_file(stream, content_type=content_type)
     # blob.upload_from_filename(source_file_name)
     # blob.make_public()
     return blob.public_url
@@ -57,7 +56,7 @@ def upload():
         with open("./uploads/images.json", mode="w") as f:
             f.write(dumps(images))
         print(name[0])
-        uri = uploadToBucket(type.stream, name[0])
+        uri = uploadToBucket(type.stream, name[0], type.content_type)
         # type.save(f"./uploads/{name[0]}")
         return dumps({
             "FullURL": f"{uri}",
