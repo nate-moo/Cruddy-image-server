@@ -121,8 +121,30 @@ def getFile(filename):
 
 @app.route("/uploads/<filename>")
 def getLink(filename):
-    if filename != "images.json":
+    print(splitext(filename)[1])
+    if splitext(filename)[1] == ".txt":
+        return send_file(f"./uploads/{secure_filename(filename)}")
+    elif filename != "images.json":
         # return send_file(f"./uploads/{secure_filename(filename)}")
         return redirect(grabFromBucket(filename))
     else:
         return "no"
+
+@app.route("/text", methods=["POST"])
+def textU():
+    j = request.form["text"]
+    # return j
+    # text = j["text"]
+    url = str(uuid4())
+    deletion = str(uuid4())
+    with open("uploads/texts.json", "r") as t:
+        loaded = loads(t.read())
+    with open("uploads/texts.json", "w") as t:
+        loaded["texts"].append([url, deletion])
+        t.write(dumps(loaded))
+    with open(f"uploads/{url}.txt", "w") as f:
+        f.write(j)
+    return dumps({
+        "URL": f"https://cruddy.xyz/uploads/{url}.txt",
+        # "Deletion Key": deletion
+    })
