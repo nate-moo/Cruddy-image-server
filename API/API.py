@@ -8,12 +8,14 @@ storage_client = storage.Client()
 bucket_name = "cruddyxyz-bucket"
 bucket = storage_client.bucket(bucket_name)
 
+
 def uploadToBucket(stream, source_file_name, content_type):
     blob = bucket.blob(source_file_name)
     blob.upload_from_file(stream, content_type=content_type)
     # blob.upload_from_filename(source_file_name)
     # blob.make_public()
     return blob.public_url
+
 
 def grabFromBucket(source_file_name):
     # blob = bucket.blob(source_file_name)
@@ -23,23 +25,26 @@ def grabFromBucket(source_file_name):
     except AttributeError:
         return None
 
+
 def deleteFromBucket(source_file_name):
     blob = bucket.get_blob(source_file_name)
     blob.delete()
 
+
 app = Flask(__name__)
 
-## Index
+
 @app.route("/<path:name>", methods=["GET"])
 def index(name):
     return send_from_directory("out", name)
+
 
 @app.route("/")
 def home():
     return redirect("/index.html")
 
-## Uploading
-@app.route("/upload", methods = ["GET", "POST"])
+
+@app.route("/upload", methods=["GET", "POST"])
 def upload():
     if request.method == "POST":
         type = request.files['file']
@@ -57,7 +62,6 @@ def upload():
             f.write(dumps(images))
         print(name[0])
         uri = uploadToBucket(type.stream, name[0], type.content_type)
-        # type.save(f"./uploads/{name[0]}")
         return dumps({
             "FullURL": f"{uri}",
             "image": name[0],
@@ -66,7 +70,6 @@ def upload():
     else:
         return "POST an image to this URL"
 
-## Deleting
 
 @app.route("/delete", methods=["GET", "POST"])
 def deleteviaGET():
@@ -78,17 +81,16 @@ def deleteviaGET():
         print(deletionUUID)
         for uuid in enumerate(images["images"]):
             print(uuid)
-        # return 'ur mom'
             if uuid[1][1] == deletionUUID:
                 print('deleted')
-                # remove(f"./uploads/{uuid[1][0]}")
                 deleteFromBucket(uuid[1][0])
                 images["images"].pop(uuid[0])
                 with open("./uploads/images.json", mode="w") as f:
                     f.write(dumps(images))
-                
+
                 return f'deleted: {deletionUUID}'
     return 'Nothing Deleted, incorrect UUID'
+
 
 @app.route("/delete/<deletionUUID>", methods=["GET"])
 def delete(deletionUUID):
@@ -99,25 +101,24 @@ def delete(deletionUUID):
         print(deletionUUID)
         for uuid in enumerate(images["images"]):
             print(uuid)
-        # return 'ur mom'
             if uuid[1][1] == deletionUUID:
                 print('deleted')
-                # remove(f"./uploads/{uuid[1][0]}")
                 deleteFromBucket(uuid[1][0])
                 images["images"].pop(uuid[0])
                 with open("./uploads/images.json", mode="w") as f:
                     f.write(dumps(images))
-                
+
                 return f'deleted: {deletionUUID}'
     return 'Nothing Deleted, incorrect UUID'
+
 
 @app.route("/view/<filename>", methods=["GET"])
 def getFile(filename):
     if filename != "images.json":
-        # return send_file(f"./uploads/{secure_filename(filename)}")
         return f"<img src='{grabFromBucket(filename)}' />"
     else:
         return "no"
+
 
 @app.route("/uploads/<filename>")
 def getLink(filename):
@@ -125,16 +126,14 @@ def getLink(filename):
     if splitext(filename)[1] == ".txt":
         return send_file(f"./uploads/{secure_filename(filename)}")
     elif filename != "images.json":
-        # return send_file(f"./uploads/{secure_filename(filename)}")
         return redirect(grabFromBucket(filename))
     else:
         return "no"
 
+
 @app.route("/text", methods=["POST"])
 def textU():
     j = request.form["text"]
-    # return j
-    # text = j["text"]
     url = str(uuid4())
     deletion = str(uuid4())
     with open("uploads/texts.json", "r") as t:
@@ -146,5 +145,4 @@ def textU():
         f.write(j)
     return dumps({
         "URL": f"https://cruddy.xyz/uploads/{url}.txt",
-        # "Deletion Key": deletion
     })
