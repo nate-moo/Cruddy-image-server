@@ -4,25 +4,25 @@ from json import loads, dumps
 from uuid import uuid4
 from os import remove
 from os.path import splitext
-from html import escape
 
 app = Flask(__name__)
 
-## Index
+
 @app.route("/<path:name>", methods=["GET"])
 def index(name):
     return send_from_directory("out", name)
+
 
 @app.route("/")
 def home():
     return redirect("/index.html")
 
-## Uploading
-@app.route("/upload", methods = ["GET", "POST"])
+
+@app.route("/upload", methods=["GET", "POST"])
 def upload():
     if request.method == "POST":
-        type = request.files['file']
-        extension = splitext(type.filename)[1]
+        filetype = request.files['file']
+        extension = splitext(filetype.filename)[1]
         with open("./uploads/images.json") as f:
             images = loads(f.read())
             name = [secure_filename(f"{uuid4()}{extension}"), str(uuid4())]
@@ -34,7 +34,7 @@ def upload():
             images["images"].append(name)
         with open("./uploads/images.json", mode="w") as f:
             f.write(dumps(images))
-        type.save(f"./uploads/{name[0]}")
+        filetype.save(f"./uploads/{name[0]}")
         return dumps({
             "FullURL": f"{request.url_root}uploads/{name[0]}",
             "image": name[0],
@@ -43,7 +43,6 @@ def upload():
     else:
         return "POST an image to this URL"
 
-## Deleting
 
 @app.route("/delete", methods=["GET", "POST"])
 def deleteviaGET():
@@ -55,16 +54,16 @@ def deleteviaGET():
         print(deletionUUID)
         for uuid in enumerate(images["images"]):
             print(uuid)
-        # return 'ur mom'
             if uuid[1][1] == deletionUUID:
                 print('deleted')
                 remove(f"./uploads/{uuid[1][0]}")
                 images["images"].pop(uuid[0])
                 with open("./uploads/images.json", mode="w") as f:
                     f.write(dumps(images))
-                
+
                 return f'deleted: {deletionUUID}'
     return 'Nothing Deleted, incorrect UUID'
+
 
 @app.route("/delete/<deletionUUID>", methods=["GET"])
 def delete(deletionUUID):
@@ -82,9 +81,10 @@ def delete(deletionUUID):
                 images["images"].pop(uuid[0])
                 with open("./uploads/images.json", mode="w") as f:
                     f.write(dumps(images))
-                
+
                 return f'deleted: {deletionUUID}'
     return 'Nothing Deleted, incorrect UUID'
+
 
 @app.route("/uploads/<filename>", methods=["GET"])
 def getFile(filename):
